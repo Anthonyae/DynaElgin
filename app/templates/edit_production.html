@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+{% block app_content %}
+
+{% block head %}
+  {{ super() }}
+  <style type="text/css">
+   
+  </style>
+{% endblock %}
+<h1>
+Created on: {{ moment(creation_time).format('LLLL') }}
+</h1>
+<hr>
+
+<form action="" method="get">
+        <div class="row">
+                <div class="col">
+                <div class ="form-control" style="background-color:azure;">
+                        {{ wtf.quick_form(form, form_type='horizontal') }}
+                </div>
+
+</form>
+
+
+{% endblock %}

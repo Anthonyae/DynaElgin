@@ -1,0 +1,25 @@
+import os
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+# Configuration class for the application. Settings are defined as class variables inside the Config class
+# Configuration items can be added to this class.
+class Config(object):
+    # Secret key protects site from seasurf. Value of key is  set as an expression with two terms joinged by "or" operator.
+    # First term looks for the environment variable "Secret_Key". 
+    # Second term is just a hardcoded string. 
+    # If not first one then default to second term.
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
+    # Flask-SqlAlchemy extention takes the location of the application's database from this configuration varialbes.
+    # also proveds fallback value when the environment does not define the variable.
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+        'sqlite:///' + os.path.join(basedir, 'app.db')
+    # feature can signal the application every time a change is about to be made in the databse
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # Used to send emails of errors
+    MAIL_SERVER = os.environ.get('MAIL_SERVER')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 25)
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') is not None
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    ADMINS = ['anthony.ae@outlook.com']

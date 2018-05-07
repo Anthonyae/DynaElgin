@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+{% block app_content %}
+
+{% block head %}
+  {{ super() }}
+  <style type="text/css">
+   
+  </style>
+{% endblock %}
+
+
+    <h1>Production:
+            <div class="pull-right">
+                    {{ form.submit_production() }}
+                    {{ wtf.form_field(form.submit_production, button_map={'submit':'success'}) }}
+            </div>
+    </h1>
+
+<hr style="height:10 px";>
+
+
+<form action="" method="post">
+    {{ form.hidden_tag() }}
+
+    <div class="row">
+        <div class="col">
+        <div class ="form-control" style="background-color:azure;">
+                {{ wtf.quick_form(form, form_type='horizontal') }}
+        </div>
+    </div>
+
+
+</form>
+
+{% endblock %}

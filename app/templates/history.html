@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+<!-- Needed to render quickform -->
+{% import 'bootstrap/wtf.html' as wtf %}
+{% block app_content %}
+
+<h1>Open Jobs:</h1>
+<!-- This will be the past jobs-->
+    {{ table }}
+<hr>
+<h1>Start Production:</h1>
+
+<form action="" method="post">
+        {{ form.hidden_tag() }}
+    
+        <div class="row">
+            <div class="col">
+            <div class ="form-control" style="background-color:azure;" >
+                    {{ wtf.quick_form(form, form_type='horizontal') }}
+            </div>
+        </div>
+    </form>
+
+<!-- OLD FORM .............. This is from the JobDetailsForm  -->
+<!-- <form action= "" method="post">
+    {{ form.hidden_tag() }}
+    <p>
+        {{ form.table.label }} 
+        {{ form.table(size=5) }}
+        {% for error in form.table.errors %}
+        <span style="color:red;">[{{ error}}]</span>
+        {% endfor %}
+   
+        {{ form.job.label }} 
+        {{ form.job(size=13) }}
+        {% for error in form.job.errors %}
+        <span style="color:red;">[{{ error}}]</span>
+        {% endfor %}
+   
+        {{ form.pn.label }}
+        {{ form.pn(size=21) }}
+        {% for error in form.pn.errors %}
+        <span style="color:red;">[{{ error}}]</span>
+        {% endfor %}
+    </p>
+    <p>
+            {{ form.operation.label }} 
+            {{ form.operation(size=5) }}
+            {% for error in form.operation.errors %}
+            <span style="color:red;">[{{ error}}]</span>
+            {% endfor %}
+    
+            {{ form.rework.label }} 
+            {{ form.rework(size=5) }}
+            {% for error in form.rework.errors %}
+            <span style="color:red;">[{{ error}}]</span>
+            {% endfor %}
+
+            {{ form.nit.label }} 
+            {{ form.nit(size=8) }}
+            {% for error in form.nit.errors %}
+            <span style="color:red;">[{{ error}}]</span>
+            {% endfor %}
+            
+            <p>{{ form.submit() }}</p>            
+    </p>
+</form> -->
+
+{% endblock %}

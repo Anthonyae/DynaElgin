@@ -1,0 +1,70 @@
+<!-- Inherit 3rd level hierichy start with bootsrap -->
+{% extends 'bootstrap/base.html' %}
+   
+
+<!-- tab title -->
+{% block title %}
+        {% if title %}
+        {{title}} - Dynacast
+        {% else %}
+        Dynacast
+        {% endif %}
+{% endblock %}  
+
+<!-- Javascript imports -->
+{% block scripts %}
+<!-- flask-moment works together with moment.js so all templates must include this library. -->
+    <!-- super() statement preserves the content from the base template. Defining a block without using it casuses any content defined for this block in the base template will be lost. -->
+    {{ super() }}
+    <!-- instead of explicitly adding a <script> tag that imports library. This function generates the script tag -->
+    {{ moment.include_moment() }}
+{% endblock %}
+
+<!-- Navigation bar -->
+{% block navbar %}
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="{{ url_for('index') }}">Dynacast</a>
+                </div>
+                <div clas="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li><a href="{{ url_for('search_open') }}">All Active Jobs</a></li>
+                        <li><a href="{{ url_for('history') }}">My Production</a></li>   
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        {% if current_user.is_anonymous %}
+                        <li><a href="{{ url_for('login') }}">Login</a></li>
+                        {% else %}
+                        <li><a href="{{ url_for('user', username=current_user.username) }}">Profile</a></li>
+                        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                        {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <!-- Code to flash messages from flash method -->
+        <!-- once method called; flashed messsages are removed from the message list. So appear only once. -->
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-info" role="alert">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <!-- Start of inherited content from other HTML pages -->
+        {% block app_content %} {% endblock %}
+    </div>
+{% endblock %}
+
