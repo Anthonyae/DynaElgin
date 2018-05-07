@@ -23,3 +23,8 @@ class Config(object):
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     ADMINS = ['anthony.ae@outlook.com']
+
+# Option for logging.
+class Config(object):
+    Log_TO_STDOUT= os.environ.get('LOG_TO_-STDOUT')    
+    
