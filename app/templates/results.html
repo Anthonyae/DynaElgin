@@ -9,10 +9,17 @@
   </style>
 {% endblock %}
 
-
+{% if table %}
 <h1>Current production -    </h1>
-
+<br>
 {{ table }}
+{% endif %}
+
+{% if table_completes %}
+<h1>All completed jobs</h1>
+<br>
+{{ table_completes }}
+{% endif %}
 
 
 {% endblock %}

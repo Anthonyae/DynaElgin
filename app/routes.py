@@ -181,3 +181,13 @@ def search_open():
     table = Results(posts, no_items="There are no records that match this criteria.", border='True')
     # simple render of all data in a table
     return render_template('results.html', table=table)
+
+
+@app.route('/completejobs')
+def search_complete():
+    # query current users open jobs
+    posts = Post.query.filter(Post.status == "complete",)
+    # Import class Results from tables.py and pass along an iterable object
+    table = Results(posts, no_items="There are no records that match this criteria.", border='True')
+    # simple render of all data in a table
+    return render_template('results.html', table_completes=table)

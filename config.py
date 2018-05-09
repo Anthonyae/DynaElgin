@@ -1,4 +1,6 @@
 import os
+# loads a file before config class is created. So that variables are set when the class is created
+from dotenv import load_dotenv
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 # Configuration class for the application. Settings are defined as class variables inside the Config class
@@ -24,7 +26,5 @@ class Config(object):
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     ADMINS = ['anthony.ae@outlook.com']
 
-# Option for logging.
-class Config(object):
+    # Option for logging.
     Log_TO_STDOUT= os.environ.get('LOG_TO_-STDOUT')    
-    
