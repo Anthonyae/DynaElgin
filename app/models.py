@@ -8,7 +8,7 @@ from flask_login import UserMixin
 
 
 # User class inherits from db.model, a base class for all models from Flask-SQLAlchemy. Defines fields as variables.
-# Fields are instances fo the db.Column class, which takes the field type as an argument, plus other optional arguments
+# Fields are instances of the db.Column class, which takes the field type as an argument, plus other optional arguments
     # such as which fields are unique and indexed.
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -41,10 +41,10 @@ def load_user(id):
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    status = db.Column(db.String(64), default="Open")
+    status = db.Column(db.String(15), default="open")
     # When you pass a function as a "default='' " SQLAlchemy will set the field to the value of calling that function.
     # Note that we did not include () after utcnow. We are passing the function itself - not the result of calling it. 
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow) 
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     # Possibly add last_seen
     # Foreign key - here we use lower case to reference the table "Users" in our model. We use uppercase and the class in db.relationship() however.
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -54,16 +54,13 @@ class Post(db.Model):
     operation = db.Column(db.Integer)
     rework = db.Column(db.Boolean, default=False)
     nit = db.Column(db.Integer)
-    total_pcs = db.Column(db.Integer)
-    good_pcs = db.Column(db.Integer)
-    scrap_pcs = db.Column(db.Integer)
-    # Scrap columns
-    Scrap_blisters = db.Column(db.Integer)
-    Scrap_plating = db.Column(db.Integer)
-    # addeded column to test migrate
-    Scrap_flash = db.Column(db.Integer)
+    total_pcs = db.Column(db.Integer,)
+    good_pcs = db.Column(db.Integer, default=0)
+    scrap_pcs = db.Column(db.Integer, default=0)
     # Start of maybe columns
     user_modified_after_submission = db.Column(db.Boolean, default=False)
+    real_time_scans = db.Column(db.Boolean)
+    last_submit_time = db.Column(db.DateTime)
     job_start_time = db.Column(db.DateTime)
     job_end_time = db.Column(db.DateTime)
     lunch_taken = db.Column(db.Boolean, default=False)
@@ -72,6 +69,41 @@ class Post(db.Model):
     break_taken = db.Column(db.Boolean, default=False)
     break_start_time = db.Column(db.DateTime)
     break_end_time = db.Column(db.DateTime)
+    notes = db.Column(db.String(64))
+    # Scrap columns
+    Scrap_blisters = db.Column(db.Integer, default=0)
+    Scrap_plating = db.Column(db.Integer, default=0)
+    # addeded column to test migrate (flash). Then added the rest of the scrap columns
+    Scrap_flash = db.Column(db.Integer, default=0)
+    Scrap_assembly_issues = db.Column(db.Integer, default=0)
+    Scrap_auto_sort = db.Column(db.Integer, default=0)
+    Scrap_bad_threads = db.Column(db.Integer, default=0)
+    Scrap_bent = db.Column(db.Integer, default=0)
+    Scrap_broken_or_damaged_core = db.Column(db.Integer, default=0)
+    Scrap_buffing = db.Column(db.Integer, default=0)
+    Scrap_contamination = db.Column(db.Integer, default=0)
+    Scrap_damaged_die = db.Column(db.Integer, default=0)
+    Scrap_debris_stuck_in_part = db.Column(db.Integer, default=0)
+    Scrap_dimensional = db.Column(db.Integer, default=0)
+    Scrap_gate_vestige = db.Column(db.Integer, default=0)
+    Scrap_heat_sinks = db.Column(db.Integer, default=0)
+    Scrap_high_or_low_ejectors = db.Column(db.Integer, default=0)
+    Scrap_lamination = db.Column(db.Integer, default=0)
+    Scrap_leak_test_failed = db.Column(db.Integer, default=0)
+    Scrap_mixed_parts = db.Column(db.Integer, default=0)
+    Scrap_other = db.Column(db.Integer, default=0)
+    Scrap_part_damage = db.Column(db.Integer, default=0)
+    Scrap_parts_not_tapped = db.Column(db.Integer, default=0)
+    Scrap_parts_on_gates = db.Column(db.Integer, default=0)
+    Scrap_poor_fill = db.Column(db.Integer, default=0)
+    Scrap_porosity = db.Column(db.Integer, default=0)
+    Scrap_skiving = db.Column(db.Integer, default=0)
+    Scrap_soldering_and_dragging = db.Column(db.Integer, default=0)
+    Scrap_start_up_scrap = db.Column(db.Integer, default=0)
+    Scrap_surface_finish = db.Column(db.Integer, default=0)
+    Scrap_trim_damage = db.Column(db.Integer, default=0)
+    Scrap_weight_out_of_specification = db.Column(db.Integer, default=0)
+    Scrap_wrong_part = db.Column(db.Integer, default=0)
 
     def __repr__(self):
         return '<Post {},{},{},{},{},{},{}>'.format(self.timestamp, self.user_id, self.pn, self.job, self.total_pcs, self.rework, self.status)

@@ -1,8 +1,8 @@
-"""DB
+"""empty message
 
-Revision ID: f3083f7f52b8
+Revision ID: fe94c8028f5f
 Revises: 
-Create Date: 2018-04-28 15:54:32.640862
+Create Date: 2018-05-09 20:32:37.507747
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'f3083f7f52b8'
+revision = 'fe94c8028f5f'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -30,7 +30,7 @@ def upgrade():
     op.create_index(op.f('ix_user_username'), 'user', ['username'], unique=True)
     op.create_table('post',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('status', sa.String(length=64), nullable=True),
+    sa.Column('status', sa.String(length=15), nullable=True),
     sa.Column('timestamp', sa.DateTime(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
     sa.Column('table', sa.Integer(), nullable=True),
@@ -42,9 +42,9 @@ def upgrade():
     sa.Column('total_pcs', sa.Integer(), nullable=True),
     sa.Column('good_pcs', sa.Integer(), nullable=True),
     sa.Column('scrap_pcs', sa.Integer(), nullable=True),
-    sa.Column('Scrap_blisters', sa.Integer(), nullable=True),
-    sa.Column('Scrap_plating', sa.Integer(), nullable=True),
     sa.Column('user_modified_after_submission', sa.Boolean(), nullable=True),
+    sa.Column('real_time_scans', sa.Boolean(), nullable=True),
+    sa.Column('last_submit_time', sa.DateTime(), nullable=True),
     sa.Column('job_start_time', sa.DateTime(), nullable=True),
     sa.Column('job_end_time', sa.DateTime(), nullable=True),
     sa.Column('lunch_taken', sa.Boolean(), nullable=True),
@@ -53,6 +53,39 @@ def upgrade():
     sa.Column('break_taken', sa.Boolean(), nullable=True),
     sa.Column('break_start_time', sa.DateTime(), nullable=True),
     sa.Column('break_end_time', sa.DateTime(), nullable=True),
+    sa.Column('notes', sa.String(length=64), nullable=True),
+    sa.Column('Scrap_blisters', sa.Integer(), nullable=True),
+    sa.Column('Scrap_plating', sa.Integer(), nullable=True),
+    sa.Column('Scrap_flash', sa.Integer(), nullable=True),
+    sa.Column('Scrap_assembly_issues', sa.Integer(), nullable=True),
+    sa.Column('Scrap_auto_sort', sa.Integer(), nullable=True),
+    sa.Column('Scrap_bad_threads', sa.Integer(), nullable=True),
+    sa.Column('Scrap_bent', sa.Integer(), nullable=True),
+    sa.Column('Scrap_broken_or_damaged_core', sa.Integer(), nullable=True),
+    sa.Column('Scrap_buffing', sa.Integer(), nullable=True),
+    sa.Column('Scrap_contamination', sa.Integer(), nullable=True),
+    sa.Column('Scrap_damaged_die', sa.Integer(), nullable=True),
+    sa.Column('Scrap_debris_stuck_in_part', sa.Integer(), nullable=True),
+    sa.Column('Scrap_dimensional', sa.Integer(), nullable=True),
+    sa.Column('Scrap_gate_vestige', sa.Integer(), nullable=True),
+    sa.Column('Scrap_heat_sinks', sa.Integer(), nullable=True),
+    sa.Column('Scrap_high_or_low_ejectors', sa.Integer(), nullable=True),
+    sa.Column('Scrap_lamination', sa.Integer(), nullable=True),
+    sa.Column('Scrap_leak_test_failed', sa.Integer(), nullable=True),
+    sa.Column('Scrap_mixed_parts', sa.Integer(), nullable=True),
+    sa.Column('Scrap_other', sa.Integer(), nullable=True),
+    sa.Column('Scrap_part_damage', sa.Integer(), nullable=True),
+    sa.Column('Scrap_parts_not_tapped', sa.Integer(), nullable=True),
+    sa.Column('Scrap_parts_on_gates', sa.Integer(), nullable=True),
+    sa.Column('Scrap_poor_fill', sa.Integer(), nullable=True),
+    sa.Column('Scrap_porosity', sa.Integer(), nullable=True),
+    sa.Column('Scrap_skiving', sa.Integer(), nullable=True),
+    sa.Column('Scrap_soldering_and_dragging', sa.Integer(), nullable=True),
+    sa.Column('Scrap_start_up_scrap', sa.Integer(), nullable=True),
+    sa.Column('Scrap_surface_finish', sa.Integer(), nullable=True),
+    sa.Column('Scrap_trim_damage', sa.Integer(), nullable=True),
+    sa.Column('Scrap_weight_out_of_specification', sa.Integer(), nullable=True),
+    sa.Column('Scrap_wrong_part', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )

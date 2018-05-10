@@ -2,7 +2,7 @@
 # python functions are called view functions and are handlers for the application routes
 
 from app import app, db  # importing db to call sql alchemy to query database
-from app.forms import LoginForm, RegistrationForm, JobDetailsForm, JobProductionForm
+from app.forms import LoginForm, RegistrationForm, JobDetailsForm, JobProductionForm, BoxScanForm
 from flask import render_template, flash, redirect, url_for, request
 # import the User class to validate logged in state 
 from app.models import User, Post
@@ -103,13 +103,13 @@ def history():
     # Query Open jobs under the current user to edit in the future
     posts = Post.query.filter(Post.user_id == current_user.id, Post.status == "Open")
     # Import class Results from tables.py and pass along an iterable object
-    table = OpenJobs(posts, no_items="All jobs are submitted. If there any changes required please contact Production Control.", border='True')
+    table = OpenJobs(posts, no_items="All jobs are submitted. If there any changes required on any previous submission, please contact Production Control IMMEDIATELY.", border='True')
     # Initialize Job header information form
     form = JobDetailsForm()
     # Submit form
     if form.validate_on_submit():
         # Store all form data in a variable
-        post = Post(table=form.table.data, author=current_user, operation=form.operation.data, pn=form.pn.data, job=form.job.data, rework=form.rework.data, nit=form.nit.data, status="Open")
+        post = Post(job_start_time=datetime.utcnow(), real_time_scans= form.entry_type.data,table=form.table.data, author=current_user, operation=form.operation.data, pn=form.pn.data, job=form.job.data, rework=form.rework.data, nit=form.nit.data, status="Open")
         # add data to the sqlalchemy object
         db.session.add(post)
         # commit changes to the object to the database
@@ -117,12 +117,14 @@ def history():
         # message user that production has started.
         flash('Production Started on Job {}{}'.format(form.job.data, " "))
         # redirect to the URL
+        if post.real_time_scans == 1 or post.real_time_scans is True:
+            return redirect(url_for('complete_sort_box_scan'))
         return redirect(url_for('complete_sort'))
     # render open jobs and the production form
     return render_template('history.html', title='Start production', form=form, table=table)
 
 
-@app.route('/sorting_production', methods=['get', 'post'])
+@app.route('/sorting production', methods=['get', 'post'])
 def complete_sort():
     # Get latest entry from database for current user
     users_post = Post.query.filter(Post.user_id == current_user.id).order_by(Post.timestamp.desc()).first()
@@ -136,8 +138,64 @@ def complete_sort():
         # Update values
         data_update = {
         'status': 'complete',
+        'timestamp': datetime.utcnow(),
+        'table': form.table.data,
+        'pn': form.pn.data,
         'job': form.job.data,
-        'job_end_time': datetime(2018,7,20,12,1,2,1)
+        'operation': form.operation.data,
+        'rework': form.rework.data,
+        'nit': form.nit.data,
+        'total_pcs': form.labor_quantity.data,
+        'good_pcs': form.labor_quantity.data,
+        'scrap_pcs': 0,
+        'user_modified_after_submission': False,
+        'real_time_scans': False,
+
+        # This can be replaced by timestamp? Purpose to record every submission click. Vs. recording every box scan.
+        # 'last_submit_time': ,
+        # 'job_start_time': #  Not needed
+
+        'job_end_time': datetime.utcnow(), 
+        # 'lunch_taken': 
+        # 'lunch_start_time': 
+        # 'lunch_end_time': 
+        # 'break_taken': 
+        # 'break_start_time': 
+        # 'break_end_time': 
+        'notes': form.notes.data,
+        'Scrap_blisters': form.scrap_blisters.data,
+        'Scrap_plating': form.scrap_plating.data,
+        'Scrap_flash': form.scrap_flash.data,
+        'Scrap_assembly_issues': form.scrap_assembly_issues.data,
+        'Scrap_auto_sort': form.scrap_auto_sort.data,
+        'Scrap_bad_threads': form.scrap_bad_threads.data,
+        'Scrap_bent': form.scrap_bent.data,
+        'Scrap_broken_or_damaged_core': form.scrap_broken_or_damaged_core.data,
+        'Scrap_buffing': form.scrap_buffing.data,
+        'Scrap_contamination': form.scrap_contamination.data,
+        'Scrap_damaged_die': form.scrap_damaged_die.data,
+        'Scrap_debris_stuck_in_part': form.scrap_debris_stuck_in_part.data,
+        'Scrap_dimensional': form.scrap_dimensional.data,
+        'Scrap_gate_vestige': form.scrap_gate_vestige.data,
+        'Scrap_heat_sinks': form.scrap_heat_sinks.data,
+        'Scrap_high_or_low_ejectors': form.scrap_high_or_low_ejectors.data,
+        'Scrap_lamination': form.scrap_lamination.data,
+        'Scrap_leak_test_failed': form.scrap_leak_test_failed.data,
+        'Scrap_mixed_parts': form.scrap_mixed_parts.data,
+        'Scrap_other': form.scrap_other.data,
+        'Scrap_part_damage': form.scrap_part_damage.data,
+        'Scrap_parts_not_tapped': form.scrap_parts_not_tapped.data,
+        'Scrap_parts_on_gates': form.scrap_parts_on_gates.data,
+        'Scrap_poor_fill': form.scrap_poor_fill.data,
+        'Scrap_porosity': form.scrap_porosity.data,
+        'Scrap_skiving': form.scrap_skiving.data,
+        'Scrap_soldering_and_dragging': form.scrap_soldering_and_dragging.data,
+        'Scrap_start_up_scrap': form.scrap_start_up_scrap.data,
+        'Scrap_surface_finish': form.scrap_surface_finish.data,
+        'Scrap_trim_damage': form.scrap_trim_damage.data,
+        'Scrap_weight_out_of_specification': form.scrap_weight_out_of_specification.data,
+        'Scrap_wrong_part': form.scrap_wrong_part.data,
+
         }
         # Update record id with data from data_update dictionary
         db.session.query(Post).filter_by(id=users_post_id).update(data_update)
@@ -162,15 +220,99 @@ def edit(id):
     if form.validate_on_submit():
         # Update values
         data_update = {
-            'status': 'Updated',
+        'status': 'Updated',
+        'timestamp': datetime.utcnow(),
+        'table': form.table.data,
+        'pn': form.pn.data,
+        'job': form.job.data,
+        'operation': form.operation.data,
+        'rework': form.rework.data,
+        'nit': form.nit.data,
+        'total_pcs': form.labor_quantity.data,
+        'good_pcs': form.labor_quantity.data,
+        'scrap_pcs': 0,
+        'user_modified_after_submission': True,
+        # 'real_time_scans': False, #  Not used here as it is an edit page
+
+        # This can be replaced by timestamp? Purpose to record every submission click. Vs. recording every box scan.
+        # 'last_submit_time': ,
+        # 'job_start_time': #  Not needed
+
+        'job_end_time': datetime.utcnow(), 
+        # 'lunch_taken': 
+        # 'lunch_start_time': 
+        # 'lunch_end_time': 
+        # 'break_taken': 
+        # 'break_start_time': 
+        # 'break_end_time': 
+        'notes': form.notes.data,
+        'Scrap_blisters': form.scrap_blisters.data,
+        'Scrap_plating': form.scrap_plating.data,
+        'Scrap_flash': form.scrap_flash.data,
+        'Scrap_assembly_issues': form.scrap_assembly_issues.data,
+        'Scrap_auto_sort': form.scrap_auto_sort.data,
+        'Scrap_bad_threads': form.scrap_bad_threads.data,
+        'Scrap_bent': form.scrap_bent.data,
+        'Scrap_broken_or_damaged_core': form.scrap_broken_or_damaged_core.data,
+        'Scrap_buffing': form.scrap_buffing.data,
+        'Scrap_contamination': form.scrap_contamination.data,
+        'Scrap_damaged_die': form.scrap_damaged_die.data,
+        'Scrap_debris_stuck_in_part': form.scrap_debris_stuck_in_part.data,
+        'Scrap_dimensional': form.scrap_dimensional.data,
+        'Scrap_gate_vestige': form.scrap_gate_vestige.data,
+        'Scrap_heat_sinks': form.scrap_heat_sinks.data,
+        'Scrap_high_or_low_ejectors': form.scrap_high_or_low_ejectors.data,
+        'Scrap_lamination': form.scrap_lamination.data,
+        'Scrap_leak_test_failed': form.scrap_leak_test_failed.data,
+        'Scrap_mixed_parts': form.scrap_mixed_parts.data,
+        'Scrap_other': form.scrap_other.data,
+        'Scrap_part_damage': form.scrap_part_damage.data,
+        'Scrap_parts_not_tapped': form.scrap_parts_not_tapped.data,
+        'Scrap_parts_on_gates': form.scrap_parts_on_gates.data,
+        'Scrap_poor_fill': form.scrap_poor_fill.data,
+        'Scrap_porosity': form.scrap_porosity.data,
+        'Scrap_skiving': form.scrap_skiving.data,
+        'Scrap_soldering_and_dragging': form.scrap_soldering_and_dragging.data,
+        'Scrap_start_up_scrap': form.scrap_start_up_scrap.data,
+        'Scrap_surface_finish': form.scrap_surface_finish.data,
+        'Scrap_trim_damage': form.scrap_trim_damage.data,
+        'Scrap_weight_out_of_specification': form.scrap_weight_out_of_specification.data,
+        'Scrap_wrong_part': form.scrap_wrong_part.data,
+            
         }
-        db.session.query(Post).filter_by(id=qry.id).update(data_update)
+        db.session.query(Post).filter_by(id=transaction.id).update(data_update)
         db.session.commit()
-        flash("Job completed successfully.")
-        return redirect(url_for(history))
+        flash("Job {} completed successfully.".format(form.job.data))
+        return redirect(url_for('history'))
 
     flash("Please make the necessary edits to the job started on {}. When complete hit Submit.".format(transaction.timestamp))
     return render_template('edit_production.html', form=form, creation_time=transaction.timestamp)    
+
+
+@app.route('/sorting production boxscan', methods=['get','post'])
+@login_required
+def complete_sort_box_scan():
+    # Get latest entry from database for current user
+    users_post = Post.query.filter(Post.user_id == current_user.id).order_by(Post.timestamp.desc()).first()
+    # assing id of users transaction id to variable
+    users_post_id = users_post.id
+    # assign query total pc quantity to the
+    form = BoxScanForm()
+    # Form submission update database
+    if form.validate_on_submit():
+        data_update= {
+            # Add to the qty in the db with the qty from the form.
+            'good_pcs': users_post.good_pcs + int(form.box_quantity.data),
+
+        }
+         # Update record id with data from data_update dictionary
+        db.session.query(Post).filter_by(id=users_post_id).update(data_update)
+        db.session.commit()
+        # Message user of sucessful entry.
+        flash('Scan accepted! Your production quantity has been increased. Current  job quantity is {}'.format('adsfd'))
+        return redirect(url_for('complete_sort_box_scan'))
+    return render_template('sorting_production_boxscan.html', title="Production rt scanning", form=form)
+
 
 
 @app.route('/activejobs')
@@ -178,7 +320,7 @@ def search_open():
     # query current users open jobs
     posts = Post.query.filter(Post.status == "Open",)
     # Import class Results from tables.py and pass along an iterable object
-    table = Results(posts, no_items="There are no records that match this criteria.", border='True')
+    table = Results(posts, no_items="There are currently no employees signed into any jobs.", border='True')
     # simple render of all data in a table
     return render_template('results.html', table=table)
 

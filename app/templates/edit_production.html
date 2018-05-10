@@ -13,7 +13,9 @@ Created on: {{ moment(creation_time).format('LLLL') }}
 </h1>
 <hr>
 
-<form action="" method="get">
+<form action="" method="post">
+        {{ form.hidden_tag() }}
+        
         <div class="row">
                 <div class="col">
                 <div class ="form-control" style="background-color:azure;">
