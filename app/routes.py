@@ -2,7 +2,7 @@
 # python functions are called view functions and are handlers for the application routes
 
 from app import app, db  # importing db to call sql alchemy to query database
-from app.forms import LoginForm, RegistrationForm, JobDetailsForm, JobProductionForm, BoxScanForm
+from app.forms import LoginForm, RegistrationForm, JobDetailsForm, JobProductionForm, BoxScanForm, BoxScanValueForm, StaticForm
 from flask import render_template, flash, redirect, url_for, request
 # import the User class to validate logged in state 
 from app.models import User, Post
@@ -19,7 +19,8 @@ from werkzeug.urls import url_parse
 from sqlalchemy.sql.expression import func
 # import from tables.py the class that contains the view of the records that will be pulled
 from app.tables import Results, OpenJobs
-from datetime import datetime
+from datetime import datetime, timedelta
+import re
 
 
 @app.route('/')
@@ -91,7 +92,7 @@ def register():
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
     posts = [
-        {'author': user, 'Status': 'open', 'PN': 9220341, 'Job': 324610 }
+        {'author': user, 'Notes': 'Under Construction' }
     ]
     return render_template('user.html', user=user, posts=posts)
 
@@ -103,59 +104,66 @@ def history():
     # Query Open jobs under the current user to edit in the future
     posts = Post.query.filter(Post.user_id == current_user.id, Post.status == "Open")
     # Import class Results from tables.py and pass along an iterable object
-    table = OpenJobs(posts, no_items="All jobs are submitted. If there any changes required on any previous submission, please contact Production Control IMMEDIATELY.", border='True')
+    table = OpenJobs(posts, no_items="All jobs are submitted. If there any changes required on any previous submission, please contact Production Control or your supervisor!", border='True')
     # Initialize Job header information form
     form = JobDetailsForm()
     # Submit form
     if form.validate_on_submit():
+        # Query database for instance of Open job status on the same job number for the current user
+        query_job = Post.query.filter(Post.user_id == current_user.id, Post.job == form.job.data, Post.status == "Open").first()
+        # if query_job is not None then we already have a transaction with that job number that is open.
+        if query_job is not None:
+            flash('You already have this job {} started! Please review your open jobs and complete it before continuing.'.format(form.job.data))
+            return redirect(url_for('history'))
+        # Data to be updated. Mix of implicit job information and form information 
+
         # Store all form data in a variable
-        post = Post(job_start_time=datetime.utcnow(), real_time_scans= form.entry_type.data,table=form.table.data, author=current_user, operation=form.operation.data, pn=form.pn.data, job=form.job.data, rework=form.rework.data, nit=form.nit.data, status="Open")
+        post = Post(job_start_time=datetime.now(), real_time_scans=form.entry_type.data, table=form.table.data, author=current_user, operation=form.operation.data, pn=form.pn.data, job=form.job.data, rework=form.rework.data, nit=form.nit.data, status="Open", timestamp=datetime.now())
         # add data to the sqlalchemy object
         db.session.add(post)
+        # TEST
+        db.session.flush()
+        record_id =post.id
+        # TEST
         # commit changes to the object to the database
         db.session.commit()
         # message user that production has started.
-        flash('Production Started on Job {}{}'.format(form.job.data, " "))
+        flash('Production Started on Job {} at {}'.format(form.job.data, datetime.strftime(transaction.job_start_time,"%b %d %Y %I:%M:%S %p")))
         # redirect to the URL
         if post.real_time_scans == 1 or post.real_time_scans is True:
-            return redirect(url_for('complete_sort_box_scan'))
-        return redirect(url_for('complete_sort'))
+            return redirect(url_for('complete_sort_box_scan', record=int(record_id)))
+        return redirect(url_for('complete_sort', record=int(record_id)))
     # render open jobs and the production form
     return render_template('history.html', title='Start production', form=form, table=table)
 
 
-@app.route('/sorting production', methods=['get', 'post'])
-def complete_sort():
+@app.route('/sorting production/<int:record>', methods=['get', 'post'])
+def complete_sort(record):
     # Get latest entry from database for current user
-    users_post = Post.query.filter(Post.user_id == current_user.id).order_by(Post.timestamp.desc()).first()
+    users_post = Post.query.filter(Post.id == record).first()
     # assing id of users transaction id to variable
     users_post_id = users_post.id
     # assign query values to form.
     form = JobProductionForm(rework=users_post.rework, nit=users_post.nit, table=users_post.table, job=users_post.job, pn=users_post.pn, operation=users_post.operation)
-
     # Update database
     if form.validate_on_submit():
-        # Update values
+        # Update values; upon submission of form
         data_update = {
         'status': 'complete',
-        'timestamp': datetime.utcnow(),
+        'timestamp': datetime.now(),
         'table': form.table.data,
         'pn': form.pn.data,
         'job': form.job.data,
         'operation': form.operation.data,
         'rework': form.rework.data,
         'nit': form.nit.data,
-        'total_pcs': form.labor_quantity.data,
+        # COMPLETE TOTAL PIECES
+        # 'total_pcs': form.labor_quantity.data,
         'good_pcs': form.labor_quantity.data,
-        'scrap_pcs': 0,
+        # COMPLETE SCRAP PIECES
+        # 'scrap_pcs': 0,
         'user_modified_after_submission': False,
-        'real_time_scans': False,
-
-        # This can be replaced by timestamp? Purpose to record every submission click. Vs. recording every box scan.
-        # 'last_submit_time': ,
-        # 'job_start_time': #  Not needed
-
-        'job_end_time': datetime.utcnow(), 
+        'job_end_time': datetime.datetime.now(), 
         # 'lunch_taken': 
         # 'lunch_start_time': 
         # 'lunch_end_time': 
@@ -195,7 +203,6 @@ def complete_sort():
         'Scrap_trim_damage': form.scrap_trim_damage.data,
         'Scrap_weight_out_of_specification': form.scrap_weight_out_of_specification.data,
         'Scrap_wrong_part': form.scrap_wrong_part.data,
-
         }
         # Update record id with data from data_update dictionary
         db.session.query(Post).filter_by(id=users_post_id).update(data_update)
@@ -213,6 +220,10 @@ def edit(id):
     qry = Post.query.filter(Post.id == id)
     # assigning that one record and turning it to a non iterable item, im pretty sure.
     transaction = qry.first()
+    # Check if box scan form was used
+    if transaction.real_time_scans == 1 or transaction.real_time_scans is True:
+        flash("Please make the necessary edits to the job started on {}. When complete hit Submit.".format(datetime.strftime(transaction.job_start_time,"%b %d %Y %I:%M:%S %p")))
+        return redirect(url_for('complete_sort_box_scan',record=id))
     # assign values of query above to form
     form = JobProductionForm(job=transaction.job, table=transaction.table, pn=transaction.pn, operation=transaction.operation, nit=transaction.nit, rework=transaction.rework)
    
@@ -221,24 +232,22 @@ def edit(id):
         # Update values
         data_update = {
         'status': 'Updated',
-        'timestamp': datetime.utcnow(),
+        'timestamp': datetime.datetime.now(),
         'table': form.table.data,
         'pn': form.pn.data,
         'job': form.job.data,
         'operation': form.operation.data,
         'rework': form.rework.data,
         'nit': form.nit.data,
-        'total_pcs': form.labor_quantity.data,
+        # COMPLETE TOTAL PIECES
+        # 'total_pcs': form.labor_quantity.data,
         'good_pcs': form.labor_quantity.data,
-        'scrap_pcs': 0,
+        # COMPLETE SCRAP PIECES
         'user_modified_after_submission': True,
         # 'real_time_scans': False, #  Not used here as it is an edit page
-
-        # This can be replaced by timestamp? Purpose to record every submission click. Vs. recording every box scan.
         # 'last_submit_time': ,
         # 'job_start_time': #  Not needed
-
-        'job_end_time': datetime.utcnow(), 
+        'job_end_time': datetime.datetime.now(), 
         # 'lunch_taken': 
         # 'lunch_start_time': 
         # 'lunch_end_time': 
@@ -278,47 +287,123 @@ def edit(id):
         'Scrap_trim_damage': form.scrap_trim_damage.data,
         'Scrap_weight_out_of_specification': form.scrap_weight_out_of_specification.data,
         'Scrap_wrong_part': form.scrap_wrong_part.data,
-            
         }
         db.session.query(Post).filter_by(id=transaction.id).update(data_update)
         db.session.commit()
         flash("Job {} completed successfully.".format(form.job.data))
         return redirect(url_for('history'))
 
-    flash("Please make the necessary edits to the job started on {}. When complete hit Submit.".format(transaction.timestamp))
+    flash("Please make the necessary edits to the job started on {}. When complete hit Submit.".format(datetime.strftime(transaction.job_start_time,"%b %d %Y %I:%M:%S %p")))
     return render_template('edit_production.html', form=form, creation_time=transaction.timestamp)    
 
-
-@app.route('/sorting production boxscan', methods=['get','post'])
 @login_required
-def complete_sort_box_scan():
+@app.route('/sorting production boxscan/<int:record>', methods=['get','post'])
+def complete_sort_box_scan(record):
     # Get latest entry from database for current user
-    users_post = Post.query.filter(Post.user_id == current_user.id).order_by(Post.timestamp.desc()).first()
+    users_post = Post.query.filter(Post.id == record).first()
     # assing id of users transaction id to variable
     users_post_id = users_post.id
     # assign query total pc quantity to the
     form = BoxScanForm()
+    form_value = BoxScanValueForm()
     # Form submission update database
     if form.validate_on_submit():
+        # Retrieve first match of integers being scanned to get box quantity
+        box_quantity = int(re.findall('\d+',form.box_quantity.data)[0])
+         # assing plus or negative to variable,  1 for positive
+        box_value = form_value.production_value.data 
+        # Error handling of negative transaciton
+        if box_value == 2:
+            negative_check = box_quantity - box_quantity
+            if negative_check < 0:
+                flash('This transaction of {} pcs will result in a negative quantity of {} pcs! Please review your selection.'.format(box_quantity, negative_check))
+                redirect(url_for('complete_sort_box_scan'))
+
+        # Data to be updated in the box scan form.
         data_update= {
             # Add to the qty in the db with the qty from the form.
-            'good_pcs': users_post.good_pcs + int(form.box_quantity.data),
-
+            'good_pcs': users_post.good_pcs + box_quantity,
+            'last_submit_time': datetime.now(),
+            # 'job_rate' : users_post.job_start_time - datetime.now()
         }
          # Update record id with data from data_update dictionary
         db.session.query(Post).filter_by(id=users_post_id).update(data_update)
         db.session.commit()
         # Message user of sucessful entry.
-        flash('Scan accepted! Your production quantity has been increased. Current  job quantity is {}'.format('adsfd'))
-        return redirect(url_for('complete_sort_box_scan'))
-    return render_template('sorting_production_boxscan.html', title="Production rt scanning", form=form)
+        flash('Scan accepted! Your production quantity has been increased by {} pcs! Current job quantity is {} pcs!'.format(box_quantity, users_post.good_pcs))
+        return redirect(url_for('complete_sort_box_scan', record=record))
+    return render_template('sorting_production_boxscan.html', title="Production rt scanning", form=form, form_value=form_value, variable_id=str(record))
 
+@login_required
+@app.route('/sorting production boxscan submission/<int:record>', methods=['get', 'post'])
+def complete_sort_box_scan_submission(record):
+    # Get record passed in from box scan form
+    users_post = Post.query.filter(Post.id == int(record))
+    # Show user current job details
+    table = Results(users_post, no_items="This is an error. Please contact Production Control or turn in a written form.", border='True')
+    # Render form to complete update
+    form = StaticForm()
+    # Form submitted and passed checks
+    if form.validate_on_submit():
+     # Data to be updated in the static form.
+        data_update = {
+            'status': 'complete',
+            'timestamp': datetime.datetime.now(),
+            # NEED TO COMPLETE = GET ALL SCRAP AND UPDATE TOTAL VALUE
+            'job_end_time': datetime.datetime.now(), 
+            'notes': form.notes.data,
+            'Scrap_blisters': form.scrap_blisters.data,
+            'Scrap_plating': form.scrap_plating.data,
+            'Scrap_flash': form.scrap_flash.data,
+            'Scrap_assembly_issues': form.scrap_assembly_issues.data,
+            'Scrap_auto_sort': form.scrap_auto_sort.data,
+            'Scrap_bad_threads': form.scrap_bad_threads.data,
+            'Scrap_bent': form.scrap_bent.data,
+            'Scrap_broken_or_damaged_core': form.scrap_broken_or_damaged_core.data,
+            'Scrap_buffing': form.scrap_buffing.data,
+            'Scrap_contamination': form.scrap_contamination.data,
+            'Scrap_damaged_die': form.scrap_damaged_die.data,
+            'Scrap_debris_stuck_in_part': form.scrap_debris_stuck_in_part.data,
+            'Scrap_dimensional': form.scrap_dimensional.data,
+            'Scrap_gate_vestige': form.scrap_gate_vestige.data,
+            'Scrap_heat_sinks': form.scrap_heat_sinks.data,
+            'Scrap_high_or_low_ejectors': form.scrap_high_or_low_ejectors.data,
+            'Scrap_lamination': form.scrap_lamination.data,
+            'Scrap_leak_test_failed': form.scrap_leak_test_failed.data,
+            'Scrap_mixed_parts': form.scrap_mixed_parts.data,
+            'Scrap_other': form.scrap_other.data,
+            'Scrap_part_damage': form.scrap_part_damage.data,
+            'Scrap_parts_not_tapped': form.scrap_parts_not_tapped.data,
+            'Scrap_parts_on_gates': form.scrap_parts_on_gates.data,
+            'Scrap_poor_fill': form.scrap_poor_fill.data,
+            'Scrap_porosity': form.scrap_porosity.data,
+            'Scrap_skiving': form.scrap_skiving.data,
+            'Scrap_soldering_and_dragging': form.scrap_soldering_and_dragging.data,
+            'Scrap_start_up_scrap': form.scrap_start_up_scrap.data,
+            'Scrap_surface_finish': form.scrap_surface_finish.data,
+            'Scrap_trim_damage': form.scrap_trim_damage.data,
+            'Scrap_weight_out_of_specification': form.scrap_weight_out_of_specification.data,
+            'Scrap_wrong_part': form.scrap_wrong_part.data,
+        }
+        # Update record id with data from data_update dictionary
+        db.session.query(Post).filter_by(id=record).update(data_update)
+        db.session.commit()
+        # Message user of sucessful entry.
+        flash('Production successfully submitted!! Please remember to log off at the end of your shift. Or start the next production job.')
+        return redirect(url_for('history'))
+    return render_template('sorting_production_boxscan_submission.html', table=table, form=form)
+
+    
 
 
 @app.route('/activejobs')
 def search_open():
     # query current users open jobs
     posts = Post.query.filter(Post.status == "Open",)
+    # change the value of attributes for representation to reader
+    for record in posts:        
+        # setattr(record, 'job_start_time', datetime.strftime(record.job_start_time,"%b %d %Y %I:%M:%S %p"))
+        x = 1
     # Import class Results from tables.py and pass along an iterable object
     table = Results(posts, no_items="There are currently no employees signed into any jobs.", border='True')
     # simple render of all data in a table

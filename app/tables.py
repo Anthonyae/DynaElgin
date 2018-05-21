@@ -14,9 +14,12 @@ class OpenJobs(Table):
 class Results(Table):
     id = Col('id')
     table = Col('Table #')
+    status = Col('Status')
     pn = Col('Part Number')
     job = Col('Job Number')
-    total_pcs = Col('Total pcs')
+    good_pcs = Col('Production output')
     rework = Col('Rework status')
-    timestamp = Col('Start Time')
+    real_time_scans = Col('Real time production?')
+    job_start_time = Col('Start Time')
+    notes = Col('job notes')
 

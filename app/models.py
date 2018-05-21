@@ -59,10 +59,14 @@ class Post(db.Model):
     scrap_pcs = db.Column(db.Integer, default=0)
     # Start of maybe columns
     user_modified_after_submission = db.Column(db.Boolean, default=False)
+    # Job time details
     real_time_scans = db.Column(db.Boolean)
     last_submit_time = db.Column(db.DateTime)
     job_start_time = db.Column(db.DateTime)
     job_end_time = db.Column(db.DateTime)
+    # Job time details expanded - rates
+    job_rate = db.Column(db.Integer, default=0)
+    # Start of employee pattern information
     lunch_taken = db.Column(db.Boolean, default=False)
     lunch_start_time = db.Column(db.DateTime)
     lunch_end_time = db.Column(db.DateTime)
