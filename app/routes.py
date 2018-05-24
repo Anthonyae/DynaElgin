@@ -392,12 +392,23 @@ def complete_sort_box_scan_submission(record):
     form = StaticForm()
     # Form submitted and passed checks
     if form.validate_on_submit():
-     # Data to be updated in the static form.
+    # Data to be updated in the static form.
+        # Calculate elapsed job time
+        dt = transaction.job_start_time
+        dt2 = datetime.datetime.now()
+        delta = dt2-dt
+        s = delta.seconds
+        hours, remainder = divmod(s, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        x ="{}:{}:{}".format(hours,minutes,seconds)
+
+        # test
         data_update = {
-            'status': 'complete',
+            'status': 'COMPLETE',
             'timestamp': datetime.datetime.now(),
             # NEED TO COMPLETE = GET ALL SCRAP AND UPDATE TOTAL VALUE
-            'job_end_time': datetime.datetime.now(), 
+            'job_end_time': datetime.datetime.now(),
+            'job_elapsed_time': x, 
             'notes': form.notes.data,
             'Scrap_blisters': form.scrap_blisters.data,
             'Scrap_plating': form.scrap_plating.data,
