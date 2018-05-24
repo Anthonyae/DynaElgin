@@ -41,7 +41,7 @@ def load_user(id):
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    status = db.Column(db.String(15), default="open")
+    status = db.Column(db.String(15), default="OPEN")
     # When you pass a function as a "default='' " SQLAlchemy will set the field to the value of calling that function.
     # Note that we did not include () after utcnow. We are passing the function itself - not the result of calling it. 
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
@@ -50,11 +50,11 @@ class Post(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     table = db.Column(db.Integer)
     pn = db.Column(db.Integer)
-    job = db.Column(db.Integer)
-    operation = db.Column(db.Integer)
+    job = db.Column(db.String(64))
+    operation = db.Column(db.String(15))
     rework = db.Column(db.Boolean, default=False)
     nit = db.Column(db.Integer)
-    total_pcs = db.Column(db.Integer,)
+    total_pcs = db.Column(db.Integer,default=0)
     good_pcs = db.Column(db.Integer, default=0)
     scrap_pcs = db.Column(db.Integer, default=0)
     # Start of maybe columns
@@ -65,14 +65,15 @@ class Post(db.Model):
     job_start_time = db.Column(db.DateTime)
     job_end_time = db.Column(db.DateTime)
     # Job time details expanded - rates
+    job_elapsed_time = db.Column(db.String(64))
     job_rate = db.Column(db.Integer, default=0)
+    job_number_of_scans = db.Column(db.Integer, default=0)
     # Start of employee pattern information
-    lunch_taken = db.Column(db.Boolean, default=False)
-    lunch_start_time = db.Column(db.DateTime)
-    lunch_end_time = db.Column(db.DateTime)
-    break_taken = db.Column(db.Boolean, default=False)
-    break_start_time = db.Column(db.DateTime)
-    break_end_time = db.Column(db.DateTime)
+    lunch_break_taken = db.Column(db.Boolean, default=False)
+    lunch_break_start_time = db.Column(db.DateTime)
+    lunch_break_end_time = db.Column(db.DateTime)
+    lunch_break_counter = db.Column(db.Integer, default=0)
+    lunch_break_total_time = db.Column(db.String(64))
     notes = db.Column(db.String(64))
     # Scrap columns
     Scrap_blisters = db.Column(db.Integer, default=0)

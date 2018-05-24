@@ -19,7 +19,8 @@ from werkzeug.urls import url_parse
 from sqlalchemy.sql.expression import func
 # import from tables.py the class that contains the view of the records that will be pulled
 from app.tables import Results, OpenJobs
-from datetime import datetime, timedelta
+import datetime
+from datetime import datetime as d
 import re
 
 
@@ -38,7 +39,7 @@ def index():
 def login():
     # Stops user from clicking the log in URL if they are already authenticated.
     if current_user.is_authenticated:  # is_authenticated - to check if user is logged in or not. 
-        return redirect(url_for('index'))
+        return redirect(url_for('history'))
     # LoginForm() is from forms.py /User created
     form = LoginForm()
     # form.validate_on_submit() - gathers data, run's all validators attached to fields, and if everything is ok returns TRUE.
@@ -50,7 +51,7 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.check_password(form.password.data):
             flash("invalid username or password")
-            return redirect(url_for('login'))
+            return redirect(url_for('index'))
         # CAN SET SESSION VARIABLES HERE FOR USERS
         # login_user() - registers the user as logged in, future pages the user navigates to will have the current_user variable set to that user.
         login_user(user, remember=form.remember_me.data)  # logs in user and checks remember_me status
@@ -102,7 +103,7 @@ def user(username):
 @login_required
 def history():
     # Query Open jobs under the current user to edit in the future
-    posts = Post.query.filter(Post.user_id == current_user.id, Post.status == "Open")
+    posts = Post.query.filter(Post.user_id == current_user.id, Post.status == "OPEN")
     # Import class Results from tables.py and pass along an iterable object
     table = OpenJobs(posts, no_items="All jobs are submitted. If there any changes required on any previous submission, please contact Production Control or your supervisor!", border='True')
     # Initialize Job header information form
@@ -110,7 +111,7 @@ def history():
     # Submit form
     if form.validate_on_submit():
         # Query database for instance of Open job status on the same job number for the current user
-        query_job = Post.query.filter(Post.user_id == current_user.id, Post.job == form.job.data, Post.status == "Open").first()
+        query_job = Post.query.filter(Post.user_id == current_user.id, Post.job == form.job.data, Post.status == "OPEN").first()
         # if query_job is not None then we already have a transaction with that job number that is open.
         if query_job is not None:
             flash('You already have this job {} started! Please review your open jobs and complete it before continuing.'.format(form.job.data))
@@ -118,7 +119,7 @@ def history():
         # Data to be updated. Mix of implicit job information and form information 
 
         # Store all form data in a variable
-        post = Post(job_start_time=datetime.now(), real_time_scans=form.entry_type.data, table=form.table.data, author=current_user, operation=form.operation.data, pn=form.pn.data, job=form.job.data, rework=form.rework.data, nit=form.nit.data, status="Open", timestamp=datetime.now())
+        post = Post(job_start_time=datetime.datetime.now(), real_time_scans=form.entry_type.data, table=form.table.data, author=current_user, operation=form.operation.data, pn=form.pn.data, job=form.job.data, rework=form.rework.data, nit=form.nit.data, status="OPEN", timestamp=datetime.datetime.now())
         # add data to the sqlalchemy object
         db.session.add(post)
         # TEST
@@ -128,7 +129,8 @@ def history():
         # commit changes to the object to the database
         db.session.commit()
         # message user that production has started.
-        flash('Production Started on Job {} at {}'.format(form.job.data, datetime.strftime(transaction.job_start_time,"%b %d %Y %I:%M:%S %p")))
+        flash('Production Started on Job {} at {}'.format(form.job.data, 'under construction'))
+        # d.strftime('ignore',"%b %d %Y %I:%M:%S %p")
         # redirect to the URL
         if post.real_time_scans == 1 or post.real_time_scans is True:
             return redirect(url_for('complete_sort_box_scan', record=int(record_id)))
@@ -148,9 +150,18 @@ def complete_sort(record):
     # Update database
     if form.validate_on_submit():
         # Update values; upon submission of form
+        # Calculate elapsed job time
+        dt = users_post.job_start_time
+        dt2 = datetime.datetime.now()
+        delta = dt2-dt
+        s = delta.seconds
+        hours, remainder = divmod(s, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        x ="{}:{}:{}".format(hours,minutes,seconds)
+
         data_update = {
-        'status': 'complete',
-        'timestamp': datetime.now(),
+        'status': 'COMPLETE',
+        'timestamp': datetime.datetime.now(),
         'table': form.table.data,
         'pn': form.pn.data,
         'job': form.job.data,
@@ -163,13 +174,22 @@ def complete_sort(record):
         # COMPLETE SCRAP PIECES
         # 'scrap_pcs': 0,
         'user_modified_after_submission': False,
-        'job_end_time': datetime.datetime.now(), 
-        # 'lunch_taken': 
-        # 'lunch_start_time': 
-        # 'lunch_end_time': 
-        # 'break_taken': 
-        # 'break_start_time': 
-        # 'break_end_time': 
+        # Job time details
+        # 'real_time_scans': , #  Not applicable here
+        # 'last_submit_time': , #  Not applicable here
+        # 'job_start_time': , #  Not applicable here
+        'job_end_time': datetime.datetime.now(),
+        # Job time details expanded - rates
+        'job_elapsed_time': x,
+        # 'job_rate' =  , #  Not applicable here
+        # 'job_number_of_scans' = , #  Not applicable here
+        # Start of employee pattern information
+        # 'lunch_break_taken' = # TO DO HERE
+        # 'lunch_break_start_time' = #  TO DO HERE
+        # 'lunch_break_end_time' = #  TO DO HERE
+        # 'lunch_break_counter' = #  TO DO HERE
+        # 'lunch_break_total_time' =  TO DO HERE
+        #  Regular columns for scrap and notes
         'notes': form.notes.data,
         'Scrap_blisters': form.scrap_blisters.data,
         'Scrap_plating': form.scrap_plating.data,
@@ -222,16 +242,25 @@ def edit(id):
     transaction = qry.first()
     # Check if box scan form was used
     if transaction.real_time_scans == 1 or transaction.real_time_scans is True:
-        flash("Please make the necessary edits to the job started on {}. When complete hit Submit.".format(datetime.strftime(transaction.job_start_time,"%b %d %Y %I:%M:%S %p")))
+        flash("Please make the necessary edits to the job started on {}. When complete hit Submit.".format(d.strftime(transaction.job_start_time,"%b %d %Y %I:%M:%S %p")))
         return redirect(url_for('complete_sort_box_scan',record=id))
     # assign values of query above to form
     form = JobProductionForm(job=transaction.job, table=transaction.table, pn=transaction.pn, operation=transaction.operation, nit=transaction.nit, rework=transaction.rework)
    
     # Form submitted and passed checks
     if form.validate_on_submit():
+        # Calculate elapsed job time
+        dt = transaction.job_start_time
+        dt2 = datetime.datetime.now()
+        delta = dt2-dt
+        s = delta.seconds
+        hours, remainder = divmod(s, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        x ="{}:{}:{}".format(hours,minutes,seconds)
+
         # Update values
         data_update = {
-        'status': 'Updated',
+        'status': 'UPDATED',
         'timestamp': datetime.datetime.now(),
         'table': form.table.data,
         'pn': form.pn.data,
@@ -243,17 +272,24 @@ def edit(id):
         # 'total_pcs': form.labor_quantity.data,
         'good_pcs': form.labor_quantity.data,
         # COMPLETE SCRAP PIECES
+        # 'scrap_pcs': 0,
         'user_modified_after_submission': True,
-        # 'real_time_scans': False, #  Not used here as it is an edit page
-        # 'last_submit_time': ,
-        # 'job_start_time': #  Not needed
-        'job_end_time': datetime.datetime.now(), 
-        # 'lunch_taken': 
-        # 'lunch_start_time': 
-        # 'lunch_end_time': 
-        # 'break_taken': 
-        # 'break_start_time': 
-        # 'break_end_time': 
+        # Job time details
+        # 'real_time_scans': , #  Not applicable here
+        # 'last_submit_time': , #  Not applicable here
+        # 'job_start_time': , #  Not applicable here
+        'job_end_time': datetime.datetime.now(),
+        # Job time details expanded - rates
+        'job_elapsed_time': x,
+        # 'job_rate' =  , #  Not applicable here
+        # 'job_number_of_scans' = , #  Not applicable here
+        # Start of employee pattern information
+        # 'lunch_break_taken' = # TO DO HERE
+        # 'lunch_break_start_time' = #  TO DO HERE
+        # 'lunch_break_end_time' = #  TO DO HERE
+        # 'lunch_break_counter' = #  TO DO HERE
+        # 'lunch_break_total_time' =  TO DO HERE
+        #  Regular columns for scrap and notes
         'notes': form.notes.data,
         'Scrap_blisters': form.scrap_blisters.data,
         'Scrap_plating': form.scrap_plating.data,
@@ -293,7 +329,7 @@ def edit(id):
         flash("Job {} completed successfully.".format(form.job.data))
         return redirect(url_for('history'))
 
-    flash("Please make the necessary edits to the job started on {}. When complete hit Submit.".format(datetime.strftime(transaction.job_start_time,"%b %d %Y %I:%M:%S %p")))
+    flash("Please make the necessary edits to the job started on {}. When complete hit Submit.".format(d.strftime(transaction.job_start_time,"%b %d %Y %I:%M:%S %p")))
     return render_template('edit_production.html', form=form, creation_time=transaction.timestamp)    
 
 @login_required
@@ -320,11 +356,22 @@ def complete_sort_box_scan(record):
                 redirect(url_for('complete_sort_box_scan'))
 
         # Data to be updated in the box scan form.
+        # Calculate elapsed job time
+        dt = users_post.job_start_time
+        dt2 = datetime.datetime.now()
+        delta = dt2-dt
+        s = delta.seconds
+        # get amount of pcs
+        labor_qty = users_post.good_pcs + box_quantity
+        # calculate rate
+        rate = round(labor_qty/s*3600,0)
+
         data_update= {
             # Add to the qty in the db with the qty from the form.
-            'good_pcs': users_post.good_pcs + box_quantity,
-            'last_submit_time': datetime.now(),
-            # 'job_rate' : users_post.job_start_time - datetime.now()
+            'good_pcs': labor_qty,
+            'last_submit_time': dt2,
+            'job_rate': rate,
+            'job_number_of_scans': users_post.job_number_of_scans + 1,
         }
          # Update record id with data from data_update dictionary
         db.session.query(Post).filter_by(id=users_post_id).update(data_update)
@@ -399,10 +446,10 @@ def complete_sort_box_scan_submission(record):
 @app.route('/activejobs')
 def search_open():
     # query current users open jobs
-    posts = Post.query.filter(Post.status == "Open",)
+    posts = Post.query.filter(Post.status == "OPEN",)
     # change the value of attributes for representation to reader
     for record in posts:        
-        # setattr(record, 'job_start_time', datetime.strftime(record.job_start_time,"%b %d %Y %I:%M:%S %p"))
+        # setattr(record, 'job_start_time', d.strftime(record.job_start_time,"%b %d %Y %I:%M:%S %p"))
         x = 1
     # Import class Results from tables.py and pass along an iterable object
     table = Results(posts, no_items="There are currently no employees signed into any jobs.", border='True')
@@ -413,7 +460,7 @@ def search_open():
 @app.route('/completejobs')
 def search_complete():
     # query current users open jobs
-    posts = Post.query.filter(Post.status == "complete",)
+    posts = Post.query.filter((Post.status == "COMPLETE")|( Post.status == "UPDATED"))
     # Import class Results from tables.py and pass along an iterable object
     table = Results(posts, no_items="There are no records that match this criteria.", border='True')
     # simple render of all data in a table

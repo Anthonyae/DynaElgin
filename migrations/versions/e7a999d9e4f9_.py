@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: fe94c8028f5f
+Revision ID: e7a999d9e4f9
 Revises: 
-Create Date: 2018-05-09 20:32:37.507747
+Create Date: 2018-05-24 00:35:56.458267
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'fe94c8028f5f'
+revision = 'e7a999d9e4f9'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -35,8 +35,8 @@ def upgrade():
     sa.Column('user_id', sa.Integer(), nullable=True),
     sa.Column('table', sa.Integer(), nullable=True),
     sa.Column('pn', sa.Integer(), nullable=True),
-    sa.Column('job', sa.Integer(), nullable=True),
-    sa.Column('operation', sa.Integer(), nullable=True),
+    sa.Column('job', sa.String(length=64), nullable=True),
+    sa.Column('operation', sa.String(length=15), nullable=True),
     sa.Column('rework', sa.Boolean(), nullable=True),
     sa.Column('nit', sa.Integer(), nullable=True),
     sa.Column('total_pcs', sa.Integer(), nullable=True),
@@ -47,12 +47,14 @@ def upgrade():
     sa.Column('last_submit_time', sa.DateTime(), nullable=True),
     sa.Column('job_start_time', sa.DateTime(), nullable=True),
     sa.Column('job_end_time', sa.DateTime(), nullable=True),
-    sa.Column('lunch_taken', sa.Boolean(), nullable=True),
-    sa.Column('lunch_start_time', sa.DateTime(), nullable=True),
-    sa.Column('lunch_end_time', sa.DateTime(), nullable=True),
-    sa.Column('break_taken', sa.Boolean(), nullable=True),
-    sa.Column('break_start_time', sa.DateTime(), nullable=True),
-    sa.Column('break_end_time', sa.DateTime(), nullable=True),
+    sa.Column('job_elapsed_time', sa.String(length=64), nullable=True),
+    sa.Column('job_rate', sa.Integer(), nullable=True),
+    sa.Column('job_number_of_scans', sa.Integer(), nullable=True),
+    sa.Column('lunch_break_taken', sa.Boolean(), nullable=True),
+    sa.Column('lunch_break_start_time', sa.DateTime(), nullable=True),
+    sa.Column('lunch_break_end_time', sa.DateTime(), nullable=True),
+    sa.Column('lunch_break_counter', sa.Integer(), nullable=True),
+    sa.Column('lunch_break_total_time', sa.String(length=64), nullable=True),
     sa.Column('notes', sa.String(length=64), nullable=True),
     sa.Column('Scrap_blisters', sa.Integer(), nullable=True),
     sa.Column('Scrap_plating', sa.Integer(), nullable=True),

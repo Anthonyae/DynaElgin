@@ -19,7 +19,7 @@ class JobDetailsForm(FlaskForm):
     rework = BooleanField('Rework?', validators=[Optional()])
     entry_type = BooleanField('Box-Scan submission?', validators=[Optional()])
     nit = StringField('Nit?', validators=[Regexp(message='Not a likely NIT Number', regex=r'^(\d{5}\d?)$'), Optional()])
-    table = StringField('Table #', validators=[DataRequired()])
+    table = StringField('Table #', validators=[Regexp(message='Not a valid table', regex=r'^[0-3][0-9]$|^[0-9]$|^[0-4][0]$'), DataRequired()])
     job = StringField('Job:', validators=[Regexp(message='Not a possible job number', regex=r'^0[6-7]\d{4}$'), DataRequired()])
     pn = StringField('Part Number:', validators=[Regexp(message='Not a possible part number', regex=r'^(922\d{4})$'), DataRequired()])
     operation = StringField('Operation:', validators=[Regexp(message='Not a possible operation number', regex=r'^[0-9][0-9]$'), DataRequired()])
