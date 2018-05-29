@@ -11,6 +11,7 @@ class OpenJobs(Table):
     status = Col('Job status')
     edit = LinkCol('Edit', 'edit', url_kwargs=dict(id='id'))
 
+
 class Results(Table):
     id = Col('Id')
     table = Col(' Table # ')
@@ -25,4 +26,3 @@ class Results(Table):
     last_submit_time = Col(' Last Scan Time ')
 
     notes = Col(' Job notes ')
-

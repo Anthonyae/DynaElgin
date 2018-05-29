@@ -21,5 +21,57 @@
 {{ table_completes }}
 {% endif %}
 
+<hr>
+
+{% if my_list %}
+<div class="table-title">
+    <table class="table-fill">
+        <thead>
+            <tr>
+                {% for col in my_list[0] %}
+                <th>{{ col }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in my_list %}
+            <tr class="{{ loop.cycle('odd', 'even') }}">
+                {% set rowloop = loop %}
+                {% for col in row %}
+                <td id="cell-{{ rowloop.index }}-{{ loop.index }}">{{ row[col] }}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<hr>
+
+<table>
+    <tbody>
+    {# here we iterate over every item in our list which we will pass from bar() #}
+    {% for item in x %}
+        <tr><td>{{ item }}</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<!-- <table>
+    <tr>
+      {% for cell in my_list %}
+        <td><b>{{ cell }}</b></td>
+      {% endfor %}
+    </tr>
+    {% for row in my_list %}
+      <tr>
+        {% for cell in my_list %}
+          <td>{{ cell }}</td>
+        {% endfor %}
+      </tr>
+    {% endfor %} 
+  </table> -->
+
 
 {% endblock %}

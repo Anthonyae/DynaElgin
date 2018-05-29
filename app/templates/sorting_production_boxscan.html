@@ -5,16 +5,49 @@
 {% block head %}
   {{ super() }}
   <style type="text/css">
+    body{ background: rgb(171, 240, 255);}
+
+    div#container {
+      padding: 0px;
+      background: ;
+    }
+    .content {
+      display: inline-block;
+      vertical-align: bottom;
+    }
+    .text {
+      font-family: 12px Tahoma, Geneva, sans-serif;
+      color: rgb(128, 33, 33);
+    }
   </style>
 {% endblock %}
 
-<h1>Production:</h1>
+<body>
+    
+<div id="container">
+    <div class="content">
+      <h1>Production:</h1>
+    </div>
+</div>
+
+<div class="col-xs-8"><a href=" {{url_for('complete_sort_box_scan_negative', record=variable_id)}} " role="button" class="btn btn-link" >Click here to subtract box quantities!</a></div>
+<hr style="visibility: hidden;">
+
 <h5>Please scan every box as you complete it.</h5>
 
-   <!-- Unused now as the mapping for submission is coming from the form. -->
 
-<hr style="height:10 px";>
+<hr style="margin-top:0em; margin-bottom: 6px;"/>
 
+<div id="container">
+    <div class="content">
+        <h2>Total Pcs:</h2>
+    </div>
+    <div class="content" style="padding: 0px 10px 0px 10px; border-width:2px; border-style:solid; background: white">
+        <h3> {{ total }} </h3>
+    </div>
+</div>
+
+<hr style="margin-top: 3px; margin-bottom: 6px;"/>
 
 <form action="" method="post">
     {{ form.hidden_tag() }}
@@ -26,8 +59,11 @@
         </div>
     </div>
 
+
 </form>
+
+</body>
 <div class="navbar-fixed-bottom">
 <a href=" {{url_for('complete_sort_box_scan_submission', record=variable_id) }} " role="button" class="btn btn-success btn-large" style="font-size:20pt; background-color:rgb(34, 99, 240)">Submit complete production!</a>
-</div>
+
 {% endblock %}
