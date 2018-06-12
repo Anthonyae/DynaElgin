@@ -39,3 +39,4 @@ Thumbs.db
 ######################
 /venv
 /app.db
+__pycache__
