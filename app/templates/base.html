@@ -11,9 +11,11 @@
         {% endif %}
 {% endblock %}  
 
-body {
-    padding-top: 60px
-}
+
+
+
+
+
 <!-- Javascript imports -->
 {% block scripts %}
 <!-- flask-moment works together with moment.js so all templates must include this library. -->
@@ -25,6 +27,14 @@ body {
 
 <!-- Navigation bar -->
 {% block navbar %}
+<style type="text/css">
+
+    body{ 
+        padding-top: 60px;
+    }
+    
+    
+</style>
     <nav class="navbar navbar-inverse navbar-fixed-top">
         <div class="container-fluid">
             <div class="navbar-header">
