@@ -39,7 +39,7 @@ def to_dict(model_instance, query_instance=None):
 
 
 class String_time():
-
+    """Takes a timedelta string representation. hours:minutes:seconds and after calling a method will turn the string into a int of total seconds"""
     def __init__(self, time_string):
         '''initialize time'''
         self.time = time_string.split(":")
@@ -50,3 +50,9 @@ class String_time():
         seconds = int(self.time[2])
         x = hours + minutes + seconds
         return x
+
+def s_to_string_time(seconds):
+    s = seconds
+    hours, remainder = divmod(s, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return "{}:{}:{}".format(hours, minutes, seconds)

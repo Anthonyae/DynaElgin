@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+{% block app_content %}
+
+{% block head %}
+  {{ super() }}
+  <style type="text/css">
+    body{ 
+        background: rgb(255, 165, 185);
+        height: 100%;
+    }
+    .footer {
+        position: relative;
+        margin-top: -150px; /* negative value of footer height */
+        height: 150px;
+        clear:both;
+        padding-top:20px;
+      } 
+  </style>
+{% endblock %}
+
+
+    <h1>Lunch/break started!</h1>
+
+    <div id="wrap">
+        <div id="main" class="container clear-top">
+                <a href=" {{url_for('end_break', record=record) }} " role="button" class="btn btn-success btn-large" style="font-size:20pt; background-color:rgb(74, 243, 102)">click to end lunch!</a>
+        </div>
+    </div>      
+
+{% endblock %}

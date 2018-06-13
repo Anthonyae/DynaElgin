@@ -23,7 +23,7 @@ from app.tables import Results, OpenJobs
 import datetime
 from datetime import datetime as d
 # import my function for elapsed time
-from app.my_functions import elapsed_time, String_time,query_to_list, obj_to_list, to_dict
+from app.my_functions import elapsed_time, String_time,query_to_list, obj_to_list, to_dict, s_to_string_time
 # import regular expressions
 import re
 import csv
@@ -476,31 +476,65 @@ def start_break(record):
     users_post = Post.query.filter(Post.id == int(record)).first()
     # Current time
     now = datetime.datetime.now()
-    # previous elapsed time
-    previous_time = users_post.lunch_break_total_time
-    # add previous elapsed time(string) to current time duration(timedelta)
-    total_time = None
-    if previous_time:
-        s_time_object = String_time(previous_time)
-        s = s_time_object.string_seconds()
-        delta = datetime.timedelta(seconds=s)
-        total_time = elapsed_time(delta)
     # update data
     data_update = {
         'lunch_break_taken': True,
         'lunch_break_start_time': now,
         'lunch_break_end_time': None ,
-        # 'lunch_break_counter': users_post.lunch_break_counter + 1,
+        'lunch_break_counter': users_post.lunch_break_counter + 1,
+        # 'lunch_break_total_time': ,
+    }
+    db.session.query(Post).filter_by(id=users_post.id).update(data_update)
+    db.session.commit()
+    # Message user of successful entry.
+    flash('Lunch/break has started on job {}'.format(users_post.job))
+    return render_template('lunch_break.html', record=record)
+    # return redirect(url_for('end_break', record=record,))
+
+    
+@app.route('/break_timer2/<int:record>', methods=['get', 'post'])
+@login_required
+def end_break(record):
+    # Get record passed in from box scan form
+    users_post = Post.query.filter(Post.id == int(record)).first()
+    # Current time
+    now = datetime.datetime.now()
+    # previous elapsed time of lunch break total time
+    previous_time = users_post.lunch_break_total_time
+    # add previous elapsed time(string) to current time duration(timedelta)
+    total_time = None
+    if previous_time:
+        # init class - splits time into a list of [hours,minutes,seconds]
+        s_time_object = String_time(previous_time)
+        # change interval list from above into seconds
+        s = s_time_object.string_seconds()
+        # convert seconds into a timedelta object NOT NEEDED NOW...
+        # delta = datetime.timedelta(seconds=s)
+
+        # init class - this time for the difference between break start time and now
+        x = now - users_post.lunch_break_start_time
+        now_s = datetime.timedelta.total_seconds(x)
+        # not needed now
+        # now_delta = datetime.timedelta(seconds=now_s)
+
+        # add previous timedelta object with current timedelta object
+        total_seconds = s + now_s
+        total_time = s_to_string_time(total_seconds)
+    else:
+        total_time = elapsed_time(users_post.lunch_break_start_time,now)
+     # update data
+    data_update = {
+        'lunch_break_taken': False,
+        # 'lunch_break_start_time': ,
+        'lunch_break_end_time': now ,
+        # 'lunch_break_counter': ,
         'lunch_break_total_time': total_time,
     }
     db.session.query(Post).filter_by(id=users_post.id).update(data_update)
     db.session.commit()
     # Message user of successful entry.
-    flash('Lunch/break has started')
+    flash('Lunch/break has ended. Please select your job {} to continue production.'.format(users_post.job))
     return redirect(url_for('history', record=record,))
-
-    
-
 
 @app.route('/activejobs')
 def search_open():
@@ -521,8 +555,8 @@ def search_complete():
     # query current users open jobs
     posts = Post.query.filter((Post.status == "COMPLETE")|( Post.status == "UPDATED")).all()
     # Import class Results from tables.py and pass along an iterable object
-    # table = Results(posts, no_items="There are no records that match this criteria.", border='True')
-    table = [1,2]
+    table = Results(posts, no_items="There are no records that match this criteria.", border='True')
+
     # simple render of all data in a table
 
-    return render_template('results.html', table_completes=table, my_list=posts,)
+    return render_template('results.html', table_completes=table,)
