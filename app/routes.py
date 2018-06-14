@@ -136,7 +136,7 @@ def history():
         # redirect to the URL
         if post.real_time_scans == 1 or post.real_time_scans is True:
             return redirect(url_for('complete_sort_box_scan', record=int(new_record.id)))
-        return redirect(url_for('complete_sort', record=int(new_record.id)))
+        return redirect(url_for('complete_sort', record=str(new_record.id)))
     # render open jobs and the production form
     return render_template('history.html', title='Start production', form=form, table=table)
 
@@ -328,6 +328,7 @@ def complete_sort_box_scan(record):
     form = BoxScanForm()
     # Form submission update database
     if form.validate_on_submit():
+        print("valid submit")
         # Retrieve first match of integers being scanned to get box quantity
         box_quantity = int(re.findall('\d+',form.box_quantity.data)[0])
         # Data to be updated in the box scan form.
@@ -501,25 +502,32 @@ def end_break(record):
     now = datetime.datetime.now()
     # previous elapsed time of lunch break total time
     previous_time = users_post.lunch_break_total_time
+    print(previous_time)
     # add previous elapsed time(string) to current time duration(timedelta)
     total_time = None
     if previous_time:
         # init class - splits time into a list of [hours,minutes,seconds]
         s_time_object = String_time(previous_time)
+        print(s_time_object, "s_time_object, list")
         # change interval list from above into seconds
-        s = s_time_object.string_seconds()
+        s = int(round(s_time_object.string_seconds()))
+        print(s,"s, this should be an INT and seconds")
         # convert seconds into a timedelta object NOT NEEDED NOW...
         # delta = datetime.timedelta(seconds=s)
 
         # init class - this time for the difference between break start time and now
         x = now - users_post.lunch_break_start_time
-        now_s = datetime.timedelta.total_seconds(x)
+        print(x, "x, This should be a positive number, type - interval")
+        now_s = int(round(datetime.timedelta.total_seconds(x),0))
+        print(now_s, "now_s, this should be a positive number and rounded to an integer ")
         # not needed now
         # now_delta = datetime.timedelta(seconds=now_s)
 
         # add previous timedelta object with current timedelta object
         total_seconds = s + now_s
+        print(total_seconds, "total_seconds")
         total_time = s_to_string_time(total_seconds)
+        print(total_time, "total_time")
     else:
         total_time = elapsed_time(users_post.lunch_break_start_time,now)
      # update data

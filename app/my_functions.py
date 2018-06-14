@@ -51,8 +51,11 @@ class String_time():
         x = hours + minutes + seconds
         return x
 
-def s_to_string_time(seconds):
+def s_to_string_time(seconds, switch=False):
+    """"changes seconds represented by a int into a string representation of hours:minutes:seconds. """
     s = seconds
+    if switch is True:
+        s = round(s, 0)
     hours, remainder = divmod(s, 3600)
     minutes, seconds = divmod(remainder, 60)
     return "{}:{}:{}".format(hours, minutes, seconds)
