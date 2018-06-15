@@ -19,6 +19,18 @@
       font-family: 12px Tahoma, Geneva, sans-serif;
       color: rgb(128, 33, 33);
     }
+    .neg_scan_link {
+      display: inline-block;
+      background-color: #f44336;
+      color: #FFFFFF;
+      padding: 14px 25px;
+      text-align: center;
+      text-decoration: none;
+      font-size: 16px;
+      margin-left: 20px;
+      opacity: 0.9;
+  }
+    
   </style>
 {% endblock %}
 
@@ -30,8 +42,6 @@
     </div>
 </div>
 
-<div class="col-xs-8"><a href=" {{url_for('complete_sort_box_scan_negative', record=variable_id)}} " role="button" class="btn btn-link" >Click here to subtract box quantities!</a></div>
-<hr style="visibility: hidden;">
 
 <h5>Please scan every box as you complete it.</h5>
 
@@ -48,19 +58,23 @@
 </div>
 
 <hr style="margin-top: 3px; margin-bottom: 6px;"/>
-
+<div class="form-group">
 <form action="" method="post">
     {{ form.hidden_tag() }}
-
     <div class="row">
         <div class="col">
         <div class ="form-control" style="background-color:azure;">
                 {{ wtf.quick_form(form, form_type='horizontal') }}
         </div>
     </div>
-
-
 </form>
+</div>
+<!-- Link that directs user to subtract pcs -->
+<div  style="padding-top: 150px; text-align:right;">
+    <a href=" {{url_for('complete_sort_box_scan_negative', record=variable_id)}} " role="button" class="btn btn-link" style="background-color:black; color:white; border-radius: 25px">Click here to subtract box quantities!</a>
+</div>
+<div id="container" style="padding: 150px 0px 100px 0px;"></div>
+<hr style="visibility: hidden;">
 
 </body>
 <div class="navbar-fixed-bottom">

@@ -50,11 +50,7 @@
     </div>
 </div>
 
-<div class="col-xs-8"><a href=" {{url_for('complete_sort_box_scan', record=variable_id)}} " role="button" class="btn btn-link" >Click here to add box quantities!</a></div>
-<hr style="visibility: hidden;">
-
-
-<h5>Please scan the quantity you want to remove from your production. Once complete return to the previous page by clicking above.</h5>
+<h5>Please scan the quantity you want to remove from your production.</h5>
 
    <!-- Unused now as the mapping for submission is coming from the form. -->
 
@@ -85,14 +81,16 @@
         </div>
 </form>
 </div>
+<!-- <div  style="padding-top: 150px; text-align:right;">
+        <a href=" {{url_for('complete_sort_box_scan_negative', record=variable_id)}} " role="button" class="btn btn-link" style="background-color:black; color:white; border-radius: 25px">Click here to subtract box quantities!</a>
+</div> -->
 <div id="container" style="padding: 150px 0px 100px 0px;"></div>
 
 </body>
 <div id="wrap">
-        <div id="main" class="container clear-top">
-                <a href=" {{url_for('complete_sort_box_scan_submission', record=variable_id) }} " role="button" class="btn btn-success btn-large" style="font-size:20pt; background-color:rgb(34, 99, 240)">Submit complete production!</a>
-
-                <a href=" {{url_for('start_break', record=variable_id) }} " role="button" class="btn btn-success btn-large" style="font-size:20pt; background-color:rgb(74, 243, 102)">Start break/lunch!</a>
+     <div id="main" class="container clear-top">
+     <a href=" {{url_for('complete_sort_box_scan_submission', record=variable_id) }} " role="button" class="btn btn-success btn-large" style="font-size:20pt; background-color:rgb(34, 99, 240)">Submit complete production!</a
+     <a href=" {{url_for('start_break', record=variable_id) }} " role="button" class="btn btn-success btn-large" style="font-size:20pt; background-color:rgb(74, 243, 102)">Start break/lunch!</a>
             
       
 {% endblock %}
