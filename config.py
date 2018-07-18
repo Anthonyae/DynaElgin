@@ -2,6 +2,7 @@ import os
 # loads a file before config class is created. So that variables are set when the class is created
 from dotenv import load_dotenv
 basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(basedir, '.env')) # Added to add the .env file to the Mysql loadup
 
 # Configuration class for the application. Settings are defined as class variables inside the Config class
 # Configuration items can be added to this class.
