@@ -125,6 +125,7 @@ def history():
         # Data to be updated. Mix of implicit job information and form information.
         # Store all form data in a variable
         post = Post(job_start_time=datetime.datetime.now(), real_time_scans=form.entry_type.data, table=form.table.data, author=current_user, operation=form.operation.data, pn=form.pn.data, job=form.job.data, rework=form.rework.data, nit=form.nit.data, status="OPEN", timestamp=datetime.datetime.now())
+        print(post)
         # add data to the sqlalchemy object
         db.session.add(post)
         # commit changes to the object to the database

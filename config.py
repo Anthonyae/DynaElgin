@@ -2,6 +2,7 @@ import os
 # loads a file before config class is created. So that variables are set when the class is created
 from dotenv import load_dotenv
 basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(basedir, '.env'))
 
 # Configuration class for the application. Settings are defined as class variables inside the Config class
 # Configuration items can be added to this class.
@@ -13,7 +14,7 @@ class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
     # Flask-SqlAlchemy extention takes the location of the application's database from this configuration varialbes.
     # also proveds fallback value when the environment does not define the variable.
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')  or \
         'sqlite:///' + os.path.join(basedir, 'app.db')
     # feature can signal the application every time a change is about to be made in the databse
     SQLALCHEMY_TRACK_MODIFICATIONS = False
